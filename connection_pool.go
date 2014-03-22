@@ -1,7 +1,6 @@
 package main
 
 import (
-	"./bencoding"
   "fmt"
 )
 
@@ -9,10 +8,10 @@ type ConnectionPool struct {
   Connections []*Connection
 }
 
-func NewConnectionPool(peers []Peer, torrentInfo []bencoding.Element) *ConnectionPool {
+func NewConnectionPool(peers []*Peer, metainfo *Metainfo) *ConnectionPool {
   var connections []*Connection
   for _, peer := range peers {
-    c := NewConnection(peer, torrentInfo)
+    c := NewConnection(peer, metainfo)
     connections = append(connections, c)
   }
   return &ConnectionPool {
@@ -25,7 +24,12 @@ func (cp *ConnectionPool) Start() {
     connection.Open()
   }
   for _, connection := range cp.OpenConnections() {
+    go connection.Listen()
     connection.SendHandshakeMessage()
+  }
+  for _, connection := range cp.OpenConnections() {
+    connection.SendMessage(InterestedMessage())
+    connection.SendMessage(RequestMessage(0,0))
   }
 }
 

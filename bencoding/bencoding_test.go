@@ -86,15 +86,4 @@ func TestParseString(t *testing.T) {
     e != nil {
     t.Errorf("ParseString(%v) = (%v, %v), want (%v, %v)", "<.torrent file>", x, e, "Real file comparison", nil)
   }
-
-  // Complex test file
-  // Real test file
-  fileBytes,_ = ioutil.ReadFile("./test_resources/google-chrome.torrent")
-  in = string(fileBytes)
-  if x, e := ParseString(in);
-    x[0].DictValue["announce"].StringValue != "http://tracker.thepiratebay.org/announce" ||
-    x[0].DictValue["creation date"].IntValue != 1318743718 ||
-    e != nil {
-    t.Errorf("ParseString(%v) = (%+v, %v), want (%v, %v)", "<.torrent file>", x, e, "Partial check for comlex file", nil)
-  }
 }

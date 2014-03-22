@@ -74,6 +74,11 @@ func ParseString(s string) (elements []Element, err error) {
   return
 }
 
+func ValidBencodingString(s string) (err error) {
+  _, err = ParseString(s)
+  return
+}
+
 func nextElementType(s string) (elementType int, err error) {
   firstChar := string(s[0])
   switch firstChar {
