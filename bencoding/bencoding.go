@@ -8,6 +8,13 @@ import (
   "unicode/utf8"
 )
 
+const (
+  BencodingStringType = iota
+  BencodingIntType
+  BencodingListType
+  BencodingDictType
+)
+
 type Element struct {
   // 0 = string, 1 = int, 2 = list, 3 = dict
   ElementType int

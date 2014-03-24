@@ -1,11 +1,9 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
-  "sync"
 )
 
 const (
@@ -36,45 +34,18 @@ The torgo tasks are:
 }
 
 func download() {
-	metainfo, err := getTorrentData()
-	if err != nil {
-		log.Fatal(err)
-	}
-	peers, err := getPeers(metainfo)
-	if err != nil {
-		log.Fatal(err)
-	}
-  cp := NewConnectionPool(peers, metainfo)
-  cp.Start()
-
-  var input string
-  fmt.Scanln(&input)
-}
-
-func getTorrentData() (metainfo *Metainfo, err error) {
 	if len(os.Args) <= 2 {
-		err = errors.New("Please pass in the location of the .torrent file")
-		return
+		log.Fatal("Please pass in the location of the .torrent file")
 	}
 	filename := os.Args[2]
-  metainfo, err = NewMetainfoFromFilename(filename)
-	return
-}
-
-func getPeers(metainfo *Metainfo) (peers []*Peer, err error) {
-  var wg sync.WaitGroup
-  announcers := metainfo.AllAnnouncers()
-  for _, announcer := range announcers {
-    wg.Add(1)
-    go func(announcer *Announcer) {
-      defer wg.Done()
-      announcer.GetPeers()
-    }(announcer)
-  }
-  wg.Wait()
-  for _, announcer := range announcers {
-    peers = append(peers, announcer.Peers...)
-  }
-  fmt.Printf("%v peers added\n", len(peers))
-	return
+  torrent, err := NewTorrent(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+  err = torrent.StartDownloading()
+	if err != nil {
+		log.Fatal(err)
+	}
+  var input string
+  fmt.Scanln(&input)
 }

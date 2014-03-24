@@ -143,11 +143,10 @@ func (m *MetainfoInfoDictionary) Length() int {
   }
 }
 
-func (m *Metainfo) AllAnnouncers() (announcers []*Announcer) {
-  announcers = append(announcers, NewAnnouncer(m.Announce, m))
-  for _, announcer := range m.AnnounceList {
-    announcers = append(announcers, NewAnnouncer(announcer, m))
+func (m *Metainfo) AllTrackers() (trackers []*Tracker) {
+  trackers = append(trackers, NewTracker(m.Announce, m))
+  for _, tracker := range m.AnnounceList {
+    trackers = append(trackers, NewTracker(tracker, m))
   }
-  fmt.Printf("ANNNOUNNNCERS %+v\n", announcers)
-  return announcers
+  return trackers
 }
