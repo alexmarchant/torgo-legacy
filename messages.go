@@ -9,29 +9,23 @@ const (
 )
 
 type Message struct {
+  Length  int
   Id      int
   Payload []byte
 }
 
-func (m *Message) DeliverableBytes() (delivery []byte) {
-  delivery = append(delivery, m.Length()...)
-  if m.Id != 0 {
-    delivery = append(delivery, byte(m.Id))
-  }
-  if len(m.Payload) == 0 {
-    delivery = append(delivery, m.Payload...)
-  }
-  return
-}
+func ReadMessage(bytes []byte) (message *Message, err error) {
+  lengthBytes := bytes[0:4]
+  length := int(binary.BigEndian.Uint32(lengthBytes))
+  idBytes := bytes[4:5]
+  id := int(binary.BigEndian.Uint32(idBytes))
+  payloadBytes := bytes[5:]
 
-func (m *Message) Length() (bytes []byte) {
-  length := 0
-  if (m.Id >= 0) {
-    length += 1
+  message = &Message {
+    Length:  length,
+    Id:      id,
+    Payload: payloadBytes,
   }
-  length += len(m.Payload)
-  bytes = make([]byte, 4)
-  binary.BigEndian.PutUint32(bytes, uint32(length))
   return
 }
 
@@ -47,20 +41,39 @@ func InterestedMessage() *Message {
   }
 }
 
-func RequestMessage(index int, begin int) *Message {
-  indexBytes := make([]byte, 4)
-  binary.BigEndian.PutUint32(indexBytes, uint32(index))
-  beginBytes := make([]byte, 4)
-  binary.BigEndian.PutUint32(beginBytes, uint32(begin))
-  lengthBytes := make([]byte, 4)
-  binary.BigEndian.PutUint32(lengthBytes, uint32(MessageByteLength))
+func RequestMessage(index int, begin int) (m *Message) {
+  indexBytes := intToUint32Bytes(index)
+  beginBytes := intToUint32Bytes(begin)
+  lengthBytes := intToUint32Bytes(MessageByteLength)
   payload := []byte{}
   payload = append(payload, indexBytes...)
   payload = append(payload, beginBytes...)
   payload = append(payload, lengthBytes...)
-  return &Message {
+  m = &Message {
     Id:      6,
     Payload: payload,
   }
+  m.Length = m.CalcLength()
+  return
 }
 
+
+func (m *Message) DeliverableBytes() (delivery []byte) {
+  lengthBytes := intToUint32Bytes(m.Length)
+  delivery = append(delivery, lengthBytes...)
+  if m.Id != 0 {
+    delivery = append(delivery, byte(m.Id))
+  }
+  if len(m.Payload) == 0 {
+    delivery = append(delivery, m.Payload...)
+  }
+  return
+}
+
+func (m *Message) CalcLength() (length int) {
+  if (m.Id >= 0) {
+    length += 1
+  }
+  length += len(m.Payload)
+  return
+}

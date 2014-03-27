@@ -6,12 +6,15 @@ import (
   "fmt"
   "time"
   "errors"
+  "bytes"
 )
 
 const (
   ConnectionStateFailed     = -1
   ConnectionStateConnecting = 0
   ConnectionStateConnected  = 1
+  ConnectionStateHandshakeSent
+  ConnectionStateHandshakeReceived
 )
 
 var peerId = []byte("15620985492012023883")
@@ -60,47 +63,40 @@ func (c *Connection) Close() {
 func (c *Connection) Listen() {
   fmt.Printf("Listening for responses from: %v\n", c.Peer.Address())
   for {
-		var n uint32
-		n, err := readNBOUint32(c.TcpConn)
-		if err != nil {
-			break
-		}
-		if n > MessageByteLength {
-      fmt.Println("Message size too large: \n", n)
-			break
-		}
-
 		var buf []byte
-		if n == 0 {
-			// keep-alive - we want an empty message
-			buf = make([]byte, 1)
-		} else {
-			buf = make([]byte, n)
-		}
-
-		_, err = io.ReadFull(c.TcpConn, buf)
+    buf = make([]byte, 512)
+    _,err := c.TcpConn.Read(buf)
 		if err != nil {
+      fmt.Println(err)
 			break
 		}
-
-    fmt.Printf("%v", buf)
+    if buf[0] != 0 {
+      hm, err := ParseHandshakeMessageFromBytes(buf)
+      if err != nil {
+        fmt.Println(err)
+        fmt.Println(buf[0:100])
+        break
+      }
+      if !bytes.Equal(hm.InfoHash, c.Metainfo.InfoDictionary.Hash) {
+        c.Close()
+        fmt.Println("Disconnected, info hash didn't match")
+        break
+      }
+      fmt.Println("Handshake received, matches info")
+    } else {
+      fmt.Println("Ping")
+    }
 	}
 }
 
-func readNBOUint32(conn net.Conn) (n uint32, err error) {
+func readNBOUint32(conn net.Conn) (n int, err error) {
 	var buf [4]byte
 	_, err = conn.Read(buf[0:])
 	if err != nil {
 		return
 	}
-	n = bytesToUint32(buf[0:])
+	n, err = uint32BytesToInt(buf[0:])
 	return
-}
-
-func bytesToUint32(buf []byte) uint32 {
-	return (uint32(buf[0]) << 24) |
-		(uint32(buf[1]) << 16) |
-		(uint32(buf[2]) << 8) | uint32(buf[3])
 }
 
 func (c *Connection) ReadPiece() {
@@ -115,7 +111,8 @@ func (c *Connection) ReadPiece() {
 
 func (c *Connection) SendHandshakeMessage() (err error) {
   fmt.Printf("Sending handshake to peer: %v\n", c.Peer.Address())
-  handshakeBytes := c.handshakeMessage()
+  handshakeMessage := NewHandshakeMessage(c.Metainfo)
+  handshakeBytes := handshakeMessage.DeliverableBytes()
   num, err := c.TcpConn.Write(handshakeBytes)
   if err != nil {
     c.State = ConnectionStateFailed
@@ -141,21 +138,6 @@ func (c *Connection) SendMessage(m *Message) (err error) {
     err = errors.New(fmt.Sprintf("Problem sending message to: %v\n", c.Peer.Ip))
   }
   return
-}
-
-func (c *Connection) handshakeMessage() (message []byte) {
-	pstrlen := []byte{19}
-	pstr := []byte("BitTorrent protocol")
-	reserved := []byte{0, 0, 0, 0, 0, 0, 0, 0}
-
-	message = []byte{}
-	message = append(message, pstrlen...)
-	message = append(message, pstr...)
-	message = append(message, reserved...)
-	message = append(message, c.Metainfo.InfoDictionary.Hash...)
-	message = append(message, peerId...)
-
-	return
 }
 
 func (c *Connection) StateString() string {

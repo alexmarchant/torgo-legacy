@@ -95,11 +95,15 @@ func NewMetainfoInfoDictionary(infoElement bencoding.Element) *MetainfoInfoDicti
       path := []string{}
       if _, present := fileElement.DictValue["path"]; present {
         for _, pathPartElement := range fileElement.DictValue["path"].ListValue {
-
           path = append(path, pathPartElement.StringValue)
         }
       }
+      var name string
+      if _, present := infoElement.DictValue["name"]; present {
+        name = infoElement.DictValue["name"].StringValue
+      }
       mySingleFileInfo := &SingleFileInfo{
+        Name:   name,
         Length: length,
         Md5Sum: md5Sum,
         Path:   path,

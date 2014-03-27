@@ -8,6 +8,10 @@ type ConnectionPool struct {
   Connections []*Connection
 }
 
+const (
+  MaxPeers = 10
+)
+
 func NewConnectionPool(peers []*Peer, metainfo *Metainfo) *ConnectionPool {
   var connections []*Connection
   for _, peer := range peers {
@@ -20,17 +24,22 @@ func NewConnectionPool(peers []*Peer, metainfo *Metainfo) *ConnectionPool {
 }
 
 func (cp *ConnectionPool) Start() {
-  for _, connection := range cp.Connections {
+  for i, connection := range cp.Connections {
+    if i > MaxPeers { break }
     connection.Open()
   }
-  for _, connection := range cp.OpenConnections() {
+  for i, connection := range cp.OpenConnections() {
+    if i > MaxPeers { break }
     go connection.Listen()
     connection.SendHandshakeMessage()
   }
-  for _, connection := range cp.OpenConnections() {
-    connection.SendMessage(InterestedMessage())
-    connection.SendMessage(RequestMessage(0,0))
-  }
+  //for i, connection := range cp.OpenConnections() {
+    //if i > MaxPeers { break }
+    //interestedMessage := InterestedMessage()
+    //requestMessage := RequestMessage(0,0)
+    //connection.SendMessage(interestedMessage)
+    //connection.SendMessage(requestMessage)
+  //}
 }
 
 func (cp *ConnectionPool) OpenConnections() (connections []*Connection) {

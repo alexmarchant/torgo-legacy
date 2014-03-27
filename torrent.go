@@ -6,8 +6,12 @@ import (
   "fmt"
 )
 
+var downloadPath = "/Users/alex/Downloads"
+
 type Torrent struct {
   Metainfo *Metainfo
+  Files []*File
+  Trackers []*Tracker
 }
 
 func NewTorrent(metainfoFilePath string) (torrent *Torrent, err error) {
@@ -15,8 +19,13 @@ func NewTorrent(metainfoFilePath string) (torrent *Torrent, err error) {
   if err != nil {
     return
   }
+  files, err := getFiles(metainfo)
+  if err != nil {
+    return
+  }
   torrent = &Torrent {
     Metainfo: metainfo,
+    Files:    files,
   }
   return
 }
@@ -32,6 +41,17 @@ func (t *Torrent) StartDownloading() (err error) {
   cp := NewConnectionPool(peers, t.Metainfo)
   cp.Start()
   return
+}
+
+func getFiles(metainfo *Metainfo) (files []*File, err error) {
+  if metainfo.InfoDictionary.MultiFile {
+    for _,fileInfo := range metainfo.InfoDictionary.Files {
+      files = append(files, NewFile(fileInfo))
+    }
+  } else {
+    fileInfo := metainfo.InfoDictionary.SingleFileInfo
+    files = append(files, NewFile(fileInfo))
+  }
 }
 
 func getPeers(metainfo *Metainfo) (peers []*Peer, err error) {
