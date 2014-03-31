@@ -63,3 +63,11 @@ func (cp *ConnectionPool) PrintReport() {
     fmt.Printf("%v: %v\n", ConnectionStateString(i), count)
   }
 }
+
+func (cp *ConnectionPool) ConnectedPeerCount() (count int) {
+  for _, connection := range cp.Connections {
+    if connection.State == ConnectionStateConnected {
+      connections = append(connections, connection)
+    }
+  }
+}

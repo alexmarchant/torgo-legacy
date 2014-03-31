@@ -4,6 +4,7 @@ import (
   "sync"
   "log"
   "fmt"
+  "errors"
 )
 
 var downloadPath = "/Users/alex/Downloads"
@@ -12,6 +13,7 @@ type Torrent struct {
   Metainfo *Metainfo
   Files []*File
   Trackers []*Tracker
+  Peers []*Peer
 }
 
 func NewTorrent(metainfoFilePath string) (torrent *Torrent, err error) {
@@ -19,44 +21,39 @@ func NewTorrent(metainfoFilePath string) (torrent *Torrent, err error) {
   if err != nil {
     return
   }
-  files, err := getFiles(metainfo)
-  if err != nil {
-    return
-  }
   torrent = &Torrent {
     Metainfo: metainfo,
-    Files:    files,
   }
+  err = torrent.getFiles()
   return
 }
 
 func (t *Torrent) StartDownloading() (err error) {
-	peers, err := getPeers(t.Metainfo)
+	err = t.getPeers()
 	if err != nil {
 		log.Fatal(err)
 	}
-	if len(peers) == 0 {
-		log.Fatal("No peers found")
-	}
-  cp := NewConnectionPool(peers, t.Metainfo)
-  cp.Start()
   return
 }
 
-func getFiles(metainfo *Metainfo) (files []*File, err error) {
-  if metainfo.InfoDictionary.MultiFile {
-    for _,fileInfo := range metainfo.InfoDictionary.Files {
+func (t *Torrent) getFiles() (err error) {
+  var files []*File
+  if t.Metainfo.InfoDictionary.MultiFile {
+    for _,fileInfo := range t.Metainfo.InfoDictionary.Files {
       files = append(files, NewFile(fileInfo))
     }
   } else {
-    fileInfo := metainfo.InfoDictionary.SingleFileInfo
+    fileInfo := t.Metainfo.InfoDictionary.SingleFileInfo
     files = append(files, NewFile(fileInfo))
   }
+  t.Files = files
+  return
 }
 
-func getPeers(metainfo *Metainfo) (peers []*Peer, err error) {
+func (t *Torrent) getPeers() (err error) {
+  var peers []*Peer
   var wg sync.WaitGroup
-  trackers := metainfo.AllTrackers()
+  trackers := t.Metainfo.AllTrackers()
   for _, tracker := range trackers {
     wg.Add(1)
     go func(tracker *Tracker) {
@@ -70,6 +67,11 @@ func getPeers(metainfo *Metainfo) (peers []*Peer, err error) {
       peers = append(peers, tracker.TrackerResponse.Peers...)
     }
   }
+  if len(peers) == 0 {
+    err = errors.New("No peers found")
+    return
+  }
   fmt.Printf("%v peers added\n", len(peers))
+  t.Peers = peers
 	return
 }

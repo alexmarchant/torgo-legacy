@@ -53,11 +53,10 @@ func NewTrackerResponse(responseBytes []byte) (tr *TrackerResponse, err error) {
 
 func parseBencodingPeerList(peerList bencoding.Element) (peers []*Peer) {
 	for _, peerElement := range peerList.ListValue {
-		newPeer := &Peer{
-			Ip:     peerElement.DictValue["ip"].StringValue,
-			PeerId: peerElement.DictValue["peer id"].StringValue,
-			Port:   peerElement.DictValue["port"].IntValue,
-		}
+    newPeer := NewPeer()
+    newPeer.Ip = peerElement.DictValue["ip"].StringValue
+    newPeer.PeerId = peerElement.DictValue["peer id"].StringValue
+    newPeer.Port = peerElement.DictValue["port"].IntValue
 		peers = append(peers, newPeer)
 	}
   return
@@ -80,10 +79,9 @@ func parseBinaryPeerList(peerList bencoding.Element) (peers []*Peer, err error) 
     if err != nil {
       return nil, err
     }
-    newPeer := &Peer {
-      Ip:   peerIpString,
-      Port: peerPort,
-    }
+    newPeer := NewPeer()
+    newPeer.Ip = peerIpString
+    newPeer.Port = peerPort
     peers = append(peers, newPeer)
   }
   return
