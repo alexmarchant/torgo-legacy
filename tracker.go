@@ -26,13 +26,10 @@ func NewTracker(url string, metainfo *Metainfo) *Tracker {
 }
 
 func (t *Tracker) SendRequest() (err error) {
-  fmt.Printf("Attempting to connect to tracker: %v\n", t.Url)
   responseBody, err := t.httpGetPeerRequest()
   if err != nil {
-    fmt.Printf("Connection to tracker failed.\nMessage: %v\n", err)
     return
   }
-  fmt.Printf("Successfully connected to tracker: %v\n", t.Url)
   t.TrackerResponse, err = NewTrackerResponse(responseBody)
   return
 }

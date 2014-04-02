@@ -2,6 +2,7 @@ package main
 
 import (
   "encoding/binary"
+  "errors"
 )
 
 const (
@@ -15,10 +16,14 @@ type Message struct {
 }
 
 func ReadMessage(bytes []byte) (message *Message, err error) {
+  if len(bytes) < 6 {
+    err = errors.New("Message is too short")
+    return
+  }
   lengthBytes := bytes[0:4]
   length := int(binary.BigEndian.Uint32(lengthBytes))
-  idBytes := bytes[4:5]
-  id := int(binary.BigEndian.Uint32(idBytes))
+  idByte := bytes[4]
+  id := int(idByte)
   payloadBytes := bytes[5:]
 
   message = &Message {
@@ -41,7 +46,7 @@ func InterestedMessage() *Message {
   }
 }
 
-func RequestMessage(index int, begin int) (m *Message) {
+func NewPieceRequestMessage(index int, begin int) (m *Message) {
   indexBytes := intToUint32Bytes(index)
   beginBytes := intToUint32Bytes(begin)
   lengthBytes := intToUint32Bytes(MessageByteLength)
@@ -64,7 +69,7 @@ func (m *Message) DeliverableBytes() (delivery []byte) {
   if m.Id != 0 {
     delivery = append(delivery, byte(m.Id))
   }
-  if len(m.Payload) == 0 {
+  if len(m.Payload) != 0 {
     delivery = append(delivery, m.Payload...)
   }
   return

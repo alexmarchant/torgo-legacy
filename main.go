@@ -10,6 +10,8 @@ const (
   MaxPeerCount = 60
 )
 
+var torrent *Torrent
+
 func main() {
 	parseCliInput()
 }
@@ -34,11 +36,12 @@ The torgo tasks are:
 }
 
 func download() {
+  var err error
 	if len(os.Args) <= 2 {
 		log.Fatal("Please pass in the location of the .torrent file")
 	}
 	filename := os.Args[2]
-  torrent, err := NewTorrent(filename)
+  torrent, err = NewTorrent(filename)
 	if err != nil {
 		log.Fatal(err)
 	}

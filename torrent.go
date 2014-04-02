@@ -2,12 +2,13 @@ package main
 
 import (
   "sync"
-  "log"
   "fmt"
   "errors"
+  "time"
 )
 
 var downloadPath = "/Users/alex/Downloads"
+var maxPeers = 10
 
 type Torrent struct {
   Metainfo *Metainfo
@@ -31,9 +32,26 @@ func NewTorrent(metainfoFilePath string) (torrent *Torrent, err error) {
 func (t *Torrent) StartDownloading() (err error) {
 	err = t.getPeers()
 	if err != nil {
-		log.Fatal(err)
+    return
 	}
+  t.tryConnectingToMorePeers(maxPeers)
+  t.downloadLoop()
   return
+}
+
+func (t *Torrent) downloadLoop() {
+  for {
+    lowPeerCount := maxPeers - t.activePeerCount()
+    if lowPeerCount > 0 {
+      t.tryConnectingToMorePeers(lowPeerCount)
+    }
+    t.tryDownloadingPieces()
+
+    t.printStatus()
+
+    amt := time.Duration(3000)
+    time.Sleep(time.Millisecond * amt)
+  }
 }
 
 func (t *Torrent) getFiles() (err error) {
@@ -71,7 +89,66 @@ func (t *Torrent) getPeers() (err error) {
     err = errors.New("No peers found")
     return
   }
-  fmt.Printf("%v peers added\n", len(peers))
   t.Peers = peers
 	return
+}
+
+func (t *Torrent) totalPeerCount() (count int) {
+  count = len(t.Peers)
+  return
+}
+
+func (t *Torrent) activePeerCount() (count int) {
+  count += t.connectingPeerCount()
+  count += t.connectedPeerCount()
+  return
+}
+
+func (t *Torrent) connectingPeerCount() (count int) {
+  for _, peer := range t.Peers {
+    if peer.State == PeerStateConnecting {
+      count++
+    }
+  }
+  return
+}
+
+func (t *Torrent) connectedPeerCount() (count int) {
+  for _, peer := range t.Peers {
+    if peer.State == PeerStateConnected {
+      count++
+    }
+  }
+  return
+}
+
+func (t *Torrent) tryConnectingToMorePeers(count int) {
+  currentCount := 0
+  for _, peer := range t.Peers {
+    if currentCount >= count { return }
+    if peer.State == PeerStateNotConnected {
+      go peer.Connect()
+      currentCount++
+    }
+  }
+}
+
+func (t *Torrent) tryDownloadingPieces() {
+  for _,peer := range t.Peers {
+    if peer.State == PeerStateConnected {
+      go peer.DownloadPiece()
+    }
+  }
+}
+
+func (t *Torrent) printStatus() {
+  fmt.Printf("Downloading from %v of %v peers - DL: %vKB/s, UL: %vKB/s\n", 0, t.connectedPeerCount(), t.downloadSpeed(), t.uploadSpeed())
+}
+
+func (t *Torrent) downloadSpeed() float64 {
+  return 0
+}
+
+func (t *Torrent) uploadSpeed() float64 {
+  return 0
 }

@@ -11,6 +11,15 @@ type HandshakeMessage struct {
   PeerId   []byte
 }
 
+func NewHandshakeMessage(m *Metainfo) *HandshakeMessage {
+  return &HandshakeMessage {
+    PStrLen:  19,
+    PStr:     "BitTorrent protocol",
+    InfoHash: m.InfoDictionary.Hash,
+    PeerId:   peerId,
+  }
+}
+
 func ParseHandshakeMessageFromBytes(b []byte) (hm *HandshakeMessage, err error) {
   if len(b) == 0 {
     err = errors.New("Can't parse empty buffer")
@@ -52,18 +61,6 @@ func ParseHandshakeMessageFromBytes(b []byte) (hm *HandshakeMessage, err error) 
     PeerId:   peerId,
   }
   return
-}
-
-func NewHandshakeMessage(m *Metainfo) *HandshakeMessage {
-	pstrlen := 19
-	pstr := "BitTorrent protocol"
-
-  return &HandshakeMessage {
-    PStrLen:  pstrlen,
-    PStr:     pstr,
-    InfoHash: m.InfoDictionary.Hash,
-    PeerId:   peerId,
-  }
 }
 
 func (hm *HandshakeMessage) DeliverableBytes() (delivery []byte) {

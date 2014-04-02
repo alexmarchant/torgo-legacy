@@ -17,15 +17,9 @@ const (
   ConnectionStateHandshakeReceived
 )
 
-var peerId = []byte("15620985492012023883")
-
 type Connection struct {
 	Peer           *Peer
 	Metainfo       *Metainfo
-	AmChoking      bool
-	AmInterested   bool
-	PeerChoking    bool
-	PeerInterested bool
   TcpConn        net.Conn
   State          int
 }
@@ -34,24 +28,17 @@ func NewConnection(peer *Peer, metainfo *Metainfo) *Connection {
   return &Connection{
     Peer:           peer,
     Metainfo:       metainfo,
-    AmChoking:      true,
-    AmInterested:   false,
-    PeerChoking:    true,
-    PeerInterested: false,
     State:          ConnectionStateConnecting,
   }
 }
 
 func (c *Connection) Open() (err error) {
   timeout, _ := time.ParseDuration("3s")
-  fmt.Printf("Attempting to connect to peer: %v\n", c.Peer.Address())
   c.TcpConn, err = net.DialTimeout("tcp", c.Peer.Address(), timeout)
   if err != nil {
-    fmt.Printf("Failed to connect to peer: %v\n", c.Peer.Address())
     c.State = ConnectionStateFailed
     return
   }
-  fmt.Printf("Successfully connected to peer: %v\n", c.Peer.Address())
   c.State = ConnectionStateConnected
 	return
 }
@@ -138,17 +125,4 @@ func (c *Connection) SendMessage(m *Message) (err error) {
     err = errors.New(fmt.Sprintf("Problem sending message to: %v\n", c.Peer.Ip))
   }
   return
-}
-
-func (c *Connection) StateString() string {
-  return ConnectionStateString(c.State)
-}
-
-func ConnectionStateString(state int) string {
-  switch state {
-  case ConnectionStateFailed: return "Failed to connect"
-  case ConnectionStateConnecting: return "Connecting"
-  case ConnectionStateConnected: return "Connected"
-  default: return "Unknown"
-  }
 }
