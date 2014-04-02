@@ -34,42 +34,117 @@ func ReadMessage(bytes []byte) (message *Message, err error) {
   return
 }
 
-func KeepAliveMessage() *Message {
+func NewKeepAliveMessage() *Message {
   return &Message {
+    Length: 0,
     Id: -1,
+    Payload: []byte{},
   }
 }
 
-func InterestedMessage() *Message {
+func NewChokeMessage() *Message {
   return &Message {
-    Id: 2,
+    Length: 1,
+    Id: 0,
+    Payload: []byte{},
   }
 }
 
-func NewPieceRequestMessage(index int, begin int) (m *Message) {
+func NewUnchokeMessage() *Message {
+  return &Message {
+    Length: 1,
+    Id: 1,
+    Payload: []byte{},
+  }
+}
+
+func NewInterestedMessage() *Message {
+  return &Message {
+    Length: 1,
+    Id: 2,
+    Payload: []byte{},
+  }
+}
+
+func NewNotInterestedMessage() *Message {
+  return &Message {
+    Length: 1,
+    Id: 3,
+    Payload: []byte{},
+  }
+}
+
+func NewHaveMessage(pieceIndex int) *Message {
+  pieceIndexBytes := intToUint32Bytes(pieceIndex)
+  return &Message {
+    Length: 5,
+    Id: 4,
+    Payload: pieceIndexBytes,
+  }
+}
+
+func NewBitfieldMessage(bitfield Bitfield) *Message {
+  bitfieldBytes := bitfield.ToBytes()
+  length := 1 + len(bitfieldBytes)
+  return &Message {
+    Length: length,
+    Id: 5,
+    Payload: bitfieldBytes,
+  }
+}
+
+func NewRequestMessage(index int, begin int, length int) *Message {
   indexBytes := intToUint32Bytes(index)
   beginBytes := intToUint32Bytes(begin)
-  lengthBytes := intToUint32Bytes(MessageByteLength)
+  lengthBytes := intToUint32Bytes(length)
   payload := []byte{}
   payload = append(payload, indexBytes...)
   payload = append(payload, beginBytes...)
   payload = append(payload, lengthBytes...)
-  m = &Message {
+  return &Message {
+    Length: 13,
     Id:      6,
+    Payload: payload,
+  }
+}
+
+func NewPieceMessage(index int, begin int, block []byte) (m *Message) {
+  indexBytes := intToUint32Bytes(index)
+  beginBytes := intToUint32Bytes(begin)
+  payload := []byte{}
+  payload = append(payload, indexBytes...)
+  payload = append(payload, beginBytes...)
+  payload = append(payload, block...)
+  m = &Message {
+    Id: 7,
     Payload: payload,
   }
   m.Length = m.CalcLength()
   return
 }
 
+func NewCancelMessage(index int, begin int, length int) *Message {
+  indexBytes := intToUint32Bytes(index)
+  beginBytes := intToUint32Bytes(begin)
+  lengthBytes := intToUint32Bytes(length)
+  payload := []byte{}
+  payload = append(payload, indexBytes...)
+  payload = append(payload, beginBytes...)
+  payload = append(payload, lengthBytes...)
+  return &Message {
+    Length: 13,
+    Id:      8,
+    Payload: payload,
+  }
+}
 
 func (m *Message) DeliverableBytes() (delivery []byte) {
   lengthBytes := intToUint32Bytes(m.Length)
   delivery = append(delivery, lengthBytes...)
-  if m.Id != 0 {
+  if m.Id >= 0 {
     delivery = append(delivery, byte(m.Id))
   }
-  if len(m.Payload) != 0 {
+  if len(m.Payload) > 0 {
     delivery = append(delivery, m.Payload...)
   }
   return
