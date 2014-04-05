@@ -6,7 +6,13 @@ import (
 )
 
 func TestDeliverableBytes(t *testing.T) {
-  m := NewRequestMessage(0,0,MessageByteLength)
+  block := &Block{
+    index:  0,
+    begin:  0,
+    length: 16384,
+    state: BlockStateDownloading,
+  }
+  m := NewRequestMessage(block)
   deliverable_bytes := m.DeliverableBytes()
   expected_bytes := []byte{0,0,0,13,6,0,0,0,0,0,0,0,0,0,0,64,0}
 
@@ -15,7 +21,7 @@ func TestDeliverableBytes(t *testing.T) {
   }
 }
 
-func ReadMessageBytes(t *testing.T) {
+func TestReadMessageBytes(t *testing.T) {
   message_bytes := []byte{0,0,0,13,6,0,0,0,0,0,0,0,0,0,0,64,0}
   m, e := ReadMessage(message_bytes)
   expected_payload := []byte{0,0,0,0,0,0,0,0,0,0,64,0}
@@ -32,7 +38,7 @@ func ReadMessageBytes(t *testing.T) {
     t.Errorf("Message id parsed incorrectly")
   }
 
-  if bytes.Equal(m.Payload, expected_payload) {
-    t.Errorf("Expected &v, got &v", expected_payload, m.Payload)
+  if !bytes.Equal(m.Payload, expected_payload) {
+    t.Errorf("Expected %v, got %v", expected_payload, m.Payload)
   }
 }

@@ -147,6 +147,10 @@ func (m *MetainfoInfoDictionary) Length() int {
   }
 }
 
+func (m *MetainfoInfoDictionary) PiecesCount() int {
+  return len(m.Pieces) / 20
+}
+
 func (m *Metainfo) AllTrackers() (trackers []*Tracker) {
   trackers = append(trackers, NewTracker(m.Announce, m))
   for _, tracker := range m.AnnounceList {

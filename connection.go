@@ -76,16 +76,6 @@ func (c *Connection) Listen() {
 	}
 }
 
-func readNBOUint32(conn net.Conn) (n int, err error) {
-	var buf [4]byte
-	_, err = conn.Read(buf[0:])
-	if err != nil {
-		return
-	}
-	n, err = uint32BytesToInt(buf[0:])
-	return
-}
-
 func (c *Connection) ReadPiece() {
   fmt.Printf("Downloading block from %v\n", c.Peer.Address())
   buf := make([]byte, MessageByteLength)

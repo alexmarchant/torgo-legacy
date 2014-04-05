@@ -16,7 +16,7 @@ type Message struct {
 }
 
 func ReadMessage(bytes []byte) (message *Message, err error) {
-  if len(bytes) < 6 {
+  if len(bytes) < 4 {
     err = errors.New("Message is too short")
     return
   }
@@ -93,10 +93,10 @@ func NewBitfieldMessage(bitfield Bitfield) *Message {
   }
 }
 
-func NewRequestMessage(index int, begin int, length int) *Message {
-  indexBytes := intToUint32Bytes(index)
-  beginBytes := intToUint32Bytes(begin)
-  lengthBytes := intToUint32Bytes(length)
+func NewRequestMessage(block *Block) *Message {
+  indexBytes := intToUint32Bytes(block.index)
+  beginBytes := intToUint32Bytes(block.begin)
+  lengthBytes := intToUint32Bytes(block.length)
   payload := []byte{}
   payload = append(payload, indexBytes...)
   payload = append(payload, beginBytes...)

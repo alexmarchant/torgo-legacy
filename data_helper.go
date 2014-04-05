@@ -17,12 +17,12 @@ func uint32BytesToInt(intBytes []byte) (n int, err error) {
     err = errors.New("Must pass 4 byte slice")
     return
   }
-  var nInt32 int32
+  var nUint32 uint32
   buf := bytes.NewReader(intBytes)
-  err = binary.Read(buf, binary.BigEndian, &nInt32)
+  err = binary.Read(buf, binary.BigEndian, &nUint32)
   if err != nil {
     return
   }
-  n = int(nInt32)
+  n = int(nUint32)
   return
 }

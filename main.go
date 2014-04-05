@@ -45,7 +45,7 @@ func download() {
 	if err != nil {
 		log.Fatal(err)
 	}
-  err = torrent.StartDownloading()
+  err = torrent.Start()
 	if err != nil {
 		log.Fatal(err)
 	}

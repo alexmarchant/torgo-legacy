@@ -156,7 +156,13 @@ func TestNewBitfieldMessage(t *testing.T) {
 }
 
 func TestNewRequestMessage(t *testing.T) {
-  m := NewRequestMessage(1,1, MessageByteLength)
+  block := &Block{
+    index:  1,
+    begin:  1,
+    length: 16384,
+    state: BlockStateDownloading,
+  }
+  m := NewRequestMessage(block)
   deliverableBytes := m.DeliverableBytes()
   expectedPayloadBytes := []byte{0,0,0,1,0,0,0,1,0,0,64,0}
   expectedDeliverableBytes := []byte{0,0,0,13,6,0,0,0,1,0,0,0,1,0,0,64,0}

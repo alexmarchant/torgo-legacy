@@ -72,3 +72,8 @@ func (f *File) CreatePartFile() (err error) {
   err = of.Truncate(int64(f.Length))
   return
 }
+
+func (f *File) OpenPartFileWrite() (file *os.File, err error) {
+  file, err = os.OpenFile(f.FullPartPath(), os.O_WRONLY, 0666)
+  return
+}
