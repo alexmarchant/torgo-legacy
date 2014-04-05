@@ -1,2 +1,4 @@
 # Don't add .part files (incomlete downloads from testing)
 **/*.part
+**/*.test
+torgo
