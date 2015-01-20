@@ -1,37 +1,37 @@
 package main
 
 import (
-  "fmt"
-  "net/url"
+	"fmt"
 	"io/ioutil"
-	"net/http"
 	"net"
+	"net/http"
+	"net/url"
 	"time"
 )
 
 type Tracker struct {
-  Url             string
-  Metainfo        *Metainfo
-  TrackerResponse *TrackerResponse
+	Url             string
+	Metainfo        *Metainfo
+	TrackerResponse *TrackerResponse
 }
 
 func NewTracker(url string, metainfo *Metainfo) *Tracker {
-  return &Tracker {
-    Url:      url,
-    Metainfo: metainfo,
-    TrackerResponse: &TrackerResponse{
-      State: TrackerResponseStateNotSent,
-    },
-  }
+	return &Tracker{
+		Url:      url,
+		Metainfo: metainfo,
+		TrackerResponse: &TrackerResponse{
+			State: TrackerResponseStateNotSent,
+		},
+	}
 }
 
 func (t *Tracker) SendRequest() (err error) {
-  responseBody, err := t.httpGetPeerRequest()
-  if err != nil {
-    return
-  }
-  t.TrackerResponse, err = NewTrackerResponse(responseBody)
-  return
+	responseBody, err := t.httpGetPeerRequest()
+	if err != nil {
+		return
+	}
+	t.TrackerResponse, err = NewTrackerResponse(responseBody)
+	return
 }
 
 func (t *Tracker) urlWithParams() string {
@@ -40,22 +40,22 @@ func (t *Tracker) urlWithParams() string {
 }
 
 func (t *Tracker) httpGetPeerRequest() (responseBody []byte, err error) {
-  //fmt.Printf("GET %v\n", t.urlWithParams())
-  transport := http.Transport{
-    Dial: dialTimeout,
-  }
-  client := http.Client{
-    Transport: &transport,
-  }
-  resp, err := client.Get(t.urlWithParams())
+	//fmt.Printf("GET %v\n", t.urlWithParams())
+	transport := http.Transport{
+		Dial: dialTimeout,
+	}
+	client := http.Client{
+		Transport: &transport,
+	}
+	resp, err := client.Get(t.urlWithParams())
 	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
 	responseBody, err = ioutil.ReadAll(resp.Body)
-  if err != nil {
-    return
-  }
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -83,7 +83,7 @@ func (t *Tracker) generateParams() (urlParams string) {
 }
 
 func (t *Tracker) infoHashParam() string {
-  hash := string(t.Metainfo.InfoDictionary.Hash)
+	hash := string(t.Metainfo.InfoDictionary.Hash)
 	return url.QueryEscape(hash)
 }
 
@@ -92,7 +92,7 @@ func (t *Tracker) peerIdParam() string {
 }
 
 func (t *Tracker) leftParam() string {
-  // TODO make this dynamic
+	// TODO make this dynamic
 	return fmt.Sprintf("%v", t.Metainfo.InfoDictionary.Length())
 }
 
@@ -121,6 +121,6 @@ func (t *Tracker) eventParam() string {
 }
 
 func dialTimeout(network, addr string) (net.Conn, error) {
-  var timeout = time.Duration(2 * time.Second)
-  return net.DialTimeout(network, addr, timeout)
+	var timeout = time.Duration(2 * time.Second)
+	return net.DialTimeout(network, addr, timeout)
 }
