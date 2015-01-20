@@ -2,7 +2,7 @@ package main
 
 import (
 	"crypto/sha1"
-	"./bencoding"
+	"github.com/alexmarchant/bencoding"
   "fmt"
   "os"
   "errors"

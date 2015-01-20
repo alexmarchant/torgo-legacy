@@ -2,7 +2,7 @@ package main
 
 import (
   "testing"
-  "./bencoding"
+  "github.com/alexmarchant/bencoding"
   "io/ioutil"
 )
 

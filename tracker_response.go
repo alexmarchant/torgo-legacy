@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./bencoding"
+	"github.com/alexmarchant/bencoding"
   "fmt"
   "math"
   "strings"
